@@ -48,6 +48,9 @@ public class DummyRegistry implements UserRegistry {
     @Override
     public SearchResult getUsers(String pattern, int limit) throws RegistryException {
         SearchResult result = null;
+        if (pattern.contains("fake")) {
+            throw new RegistryException(pattern);
+        }
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher("testUser");
         if (m.matches()) {
@@ -73,7 +76,15 @@ public class DummyRegistry implements UserRegistry {
 
     @Override
     public String getUserSecurityName(String uniqueUserId) throws EntryNotFoundException {
-        return null;
+        String result = null;
+        Pattern p = Pattern.compile(uniqueUserId);
+        Matcher m = p.matcher("testUserSecurityName");
+        if (m.matches()) {
+            result = "testUserSecurityName";
+        } else {
+            throw new EntryNotFoundException(uniqueUserId);
+        }
+        return result;
     }
 
     @Override
@@ -82,8 +93,11 @@ public class DummyRegistry implements UserRegistry {
     }
 
     @Override
-    public SearchResult getGroups(String pattern, int limit) {
+    public SearchResult getGroups(String pattern, int limit) throws RegistryException {
         SearchResult result = null;
+        if (pattern.contains("fake")) {
+            throw new RegistryException(pattern);
+        }
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher("testGroup");
         if (m.matches()) {
@@ -109,7 +123,15 @@ public class DummyRegistry implements UserRegistry {
 
     @Override
     public String getGroupSecurityName(String uniqueGroupId) throws EntryNotFoundException {
-        return null;
+        String result = null;
+        Pattern p = Pattern.compile(uniqueGroupId);
+        Matcher m = p.matcher("testGroupSecurityName");
+        if (m.matches()) {
+            result = "testGroupSecurityName";
+        } else {
+            throw new EntryNotFoundException(uniqueGroupId);
+        }
+        return result;
     }
 
     @Override

@@ -59,6 +59,14 @@ public class CacheTest {
         size = cache.size();
         assertEquals("Invalid size", 1, size);
 
+        cache = cache.initialize(1, 3, 0);
+
+        size = cache.size();
+        assertEquals("Invalid initial size", 0, size);
+        cache.put("a", "a");
+        size = cache.size();
+        assertEquals("Invalid size", 1, size);
+
         cache = cache.initialize("name", 3, false);
 
         size = cache.size();
@@ -160,11 +168,20 @@ public class CacheTest {
     @Test
     public void testContainsKey() {
         ICacheUtil cache = FactoryManager.getCacheUtil();
-        cache = cache.initialize(1, 3, 1000);
+        cache = cache.initialize(1, 3, 900);
 
         cache.put("a", "a");
 
         assertEquals("The containsKey returned incorrect answer", true, cache.containsKey("a"));
+        assertFalse("The containsKey returned incorrect answer", cache.containsKey("b"));
+
+        sleep(400);
+        assertEquals("The containsKey returned incorrect answer", true, cache.containsKey("a"));
+        assertFalse("The containsKey returned incorrect answer", cache.containsKey("b"));
+
+        sleep(300);
+        assertEquals("The containsKey returned incorrect answer", true, cache.containsKey("a"));
+        assertFalse("The containsKey returned incorrect answer", cache.containsKey("b"));
     }
 
     @Test
@@ -269,6 +286,7 @@ public class CacheTest {
         cache.stopEvictionTask();
         sleep(500);
         assertNotNull("Entry is missing or corrupted.", cache.get("a"));
+        cache.stopEvictionTask();
     }
 
     @Test
@@ -283,6 +301,16 @@ public class CacheTest {
         assertEquals("Invalid size", 2, size);
         assertEquals("Wrong value", "a", cache.get("a"));
         assertEquals("Wrong value", "b", cache.get("b"));
+
+        assertTrue("Value missing or corrupted.", cache.containsValue("a"));
+        assertTrue("Value missing or corrupted.", cache.containsValue("b"));
+
+        sleep(1400);
+
+        assertTrue("Value missing or corrupted.", cache.containsValue("a"));
+        assertTrue("Value missing or corrupted.", cache.containsValue("b"));
+
+        sleep(700);
 
         assertTrue("Value missing or corrupted.", cache.containsValue("a"));
         assertTrue("Value missing or corrupted.", cache.containsValue("b"));
@@ -370,8 +398,13 @@ public class CacheTest {
         cache = cache.initialize(1, 5, 3000);
 
         assertTrue("Cache should be empty.", cache.isEmpty());
+        // Boolean value is ignored
+        assertTrue("Cache should be empty.", cache.isEmpty(true));
+        assertTrue("Cache should be empty.", cache.isEmpty(false));
         cache.put("a", "a");
         assertFalse("Cache should not be empty.", cache.isEmpty());
+        assertFalse("Cache should not be empty.", cache.isEmpty(true));
+        assertFalse("Cache should not be empty.", cache.isEmpty(false));
     }
 
     @Test
@@ -405,8 +438,15 @@ public class CacheTest {
         entry = it.next();
         assertTrue("Value missing or corrupted.", entry.equals("b"));
 
+        set = cache.keySet(true);
+
+        it = set.iterator();
+
         entry = it.next();
-        assertTrue("Value missing or corrupted.", entry.equals("c"));
+        assertTrue("Value missing or corrupted.", entry.equals("a"));
+
+        entry = it.next();
+        assertTrue("Value missing or corrupted.", entry.equals("b"));
     }
 
     @Test
@@ -415,6 +455,12 @@ public class CacheTest {
         cache = cache.initialize(1, 5, 3000);
 
         cache.put("a", "a");
+        assertFalse("Cache should not be empty.", cache.isEmpty());
+        cache.remove("a");
+        assertTrue("Cache should be empty.", cache.isEmpty());
+
+        cache.put("a", "a");
+        sleep(1400);
         assertFalse("Cache should not be empty.", cache.isEmpty());
         cache.remove("a");
         assertTrue("Cache should be empty.", cache.isEmpty());
@@ -605,6 +651,18 @@ public class CacheTest {
     }
 
     @Test
+    public void testSize_Bool() {
+        ICacheUtil cache = FactoryManager.getCacheUtil();
+        cache = cache.initialize(1, 5, 3000);
+
+        cache.put("a", "a");
+        cache.put("b", "b");
+
+        assertEquals("Cache.size() returned incorrect size.", 2, cache.size(true));
+        assertEquals("Cache.size() returned incorrect size.", 2, cache.size(false));
+    }
+
+    @Test
     public void testValues() {
         ICacheUtil cache = FactoryManager.getCacheUtil();
         cache = cache.initialize(1, 5, 3000);
@@ -636,6 +694,24 @@ public class CacheTest {
         } catch (NoSuchElementException e) {
             // Expected
         }
+
+    }
+
+    @Test
+    public void testCacheEntry() {
+        ICacheUtil cache = FactoryManager.getCacheUtil();
+        cache = cache.initialize(1, 5, 3000);
+
+        Cache.CacheEntry ce = new Cache.CacheEntry("a");
+        Cache.CacheEntry ceNull = new Cache.CacheEntry(null);
+
+        assertFalse("CacheEntry.equals() should return false.", ce.equals(null));
+        assertFalse("CacheEntry.equals() should return false.", ce.equals(new Integer(1)));
+        assertFalse("CacheEntry.equals() should return false.", ce.equals(new Cache.CacheEntry("b")));
+        assertFalse("CacheEntry.equals() should return false.", ceNull.equals(new Cache.CacheEntry("a")));
+
+        assertTrue("CacheEntry.equals() should return true.", ceNull.equals(new Cache.CacheEntry(null)));
+        assertTrue("CacheEntry.equals() should return true.", ce.equals(ce));
 
     }
 

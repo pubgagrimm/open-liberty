@@ -13,6 +13,7 @@ package com.ibm.ws.security.wim.adapter.urbridge;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.HashMap;
 import java.util.List;
@@ -120,6 +121,26 @@ public class URBridgeTest {
         }
 
         assertEquals("No user found", 1, returnRoot.getEntities().size());
+    }
+
+    @Test
+    public void testGetEntityType() {
+        assertEquals("urBridge should have 2 entity types.", 2, urBridge.getEntityType("testUser").size());
+        assertNull("There should not be any entity types found.", urBridge.getEntityType("testFakeUser"));
+        assertNull("There should not be any entity types found.", urBridge.getEntityType(""));
+
+        assertEquals("urBridge should have 2 entity types.", 2, urBridge.getEntityType("testGroup").size());
+        assertEquals("urBridge should have 2 entity types.", 2, urBridge.getEntityType("testUserSecurityName").size());
+        assertEquals("urBridge should have 2 entity types.", 2, urBridge.getEntityType("testGroupSecurityName").size());
+
+        urBridge.getEntityType("fake_testUser");
+        urBridge.getEntityType("fake_testFakeUser");
+        urBridge.getEntityType("");
+
+        urBridge.getEntityType("fake_testGroup");
+        urBridge.getEntityType("fake_testUserSecurityName");
+        urBridge.getEntityType("fake_testGroupSecurityName");
+
     }
 
     @Test
@@ -351,5 +372,28 @@ public class URBridgeTest {
             System.out.println(errorMessage);
             assertEquals("Incorrect exception thrown", WIMApplicationException.class, e.getClass());
         }
+    }
+
+    @Test
+    public void testGetGroupsForUser() {
+        Root root = new Root();
+        Root returnRoot = null;
+        Group group = new Group();
+
+        IdentifierType id = new IdentifierType();
+        id.setUniqueName("testGroup");
+
+        group.setIdentifier(id);
+
+        root.getEntities().add(group);
+
+        try {
+            returnRoot = urBridge.get(root);
+        } catch (WIMException e) {
+            String errorMessage = e.getMessage();
+            assertEquals("Call failed", false, true + " with " + errorMessage);
+        }
+
+        assertEquals("No group found", 1, returnRoot.getEntities().size());
     }
 }
